@@ -3,6 +3,29 @@ import pygame
 from sys import exit
 from settings import config
 from random import randint
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = playerWalk1 = pygame.image.load("graphics/player/player_walk_1.png").convert_alpha()
+        self.rect = self.image.get_rect(midbottom = (200,300))
+        self. gravity = 0
+
+    def player_input(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_SPACE] and self.rect.bottom >= 300:
+            self.gravity = -20
+    def apply_gravity(self):
+        self.gravity +=1 
+        self.rect.y += self.gravity
+        if self.rect.bottom >= 300:
+            self.rect.bottom = 300
+    def update(self):
+        self.player_input()
+        self.apply_gravity()
+
+
+
 def displayScore():
     #global currentTime
     currentTime = int(pygame.time.get_ticks() / 1000) - startTime
@@ -51,14 +74,11 @@ screen = pygame.display.set_mode((config["width"], config["height"]))
 pygame.display.set_caption("run")
 clock = pygame.time.Clock()
 testFont = pygame.font.Font("font/Pixeltype.ttf", 50)
-gameActive = False
+gameActive = False 
 startTime = 0
 score = 0
-bgMusic = pygame.mixer.Sound('audio/music.wav')
-bgMusic.set_volume(0.5)
-bgMusic.play(loops = -1)
-jumpSound = pygame.mixer.Sound('audio/jump.mp3')
-jumpSound.set_volume(0.5)
+player = pygame.sprite.GroupSingle()
+player.add(Player() )
 
 skySurface = pygame.image.load("graphics/sky.png").convert()
 gndSurface = pygame.image.load("graphics/ground.png").convert()
@@ -122,7 +142,6 @@ while True:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and playerRectangle.bottom  >=300:
                     playerGravity = -20
-                    jumpSound.play()
         else:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                      gameActive = True
@@ -151,14 +170,17 @@ while True:
         screen.blit(gndSurface, (0,300))
         score = displayScore()
         
-        #PLAYER 
+#PLAYER....PLAYER 
         playerGravity += 1
         playerRectangle.y += playerGravity 
         if playerRectangle.bottom >= 300: 
             playerRectangle.bottom = 300 
         playerAnimation()
         screen.blit(playerSurface, playerRectangle)
-        #Obstacle movement
+        player.draw(screen)
+        player.update()
+
+#Obstacle movement
         ObstacleRectangleList = obstacleMovement(ObstacleRectangleList)
         
         gameActive = collisions(playerRectangle, ObstacleRectangleList)
